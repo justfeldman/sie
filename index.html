@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Golden Reef Financial Model</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f6f8fa;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #222;
+    }
+    .container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        max-width: 900px;
+        margin: auto;
+    }
+    .card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+        margin-top: 0;
+    }
+    input {
+        width: 100%;
+        padding: 10px;
+        margin: 6px 0;
+        border-radius: 8px;
+        border: 1px solid #bbb;
+    }
+    button {
+        padding: 12px 18px;
+        background: black;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 100%;
+        font-size: 16px;
+    }
+    button:hover {
+        background: #444;
+    }
+    .output {
+        font-weight: bold;
+        color: #111;
+        margin-top: 8px;
+    }
+</style>
+</head>
+<body>
+
+<h1>Golden Reef – Financial Model Dashboard</h1>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Inputs</h2>
+        <label>Units Sold</label>
+        <input id="units" type="number" value="1000">
+
+        <label>Avg Order Value (AOV)</label>
+        <input id="aov" type="number" value="80">
+
+        <label>CAGR (4.2% = 0.042)</label>
+        <input id="cagr" type="number" step="0.001" value="0.042">
+
+        <label>Current Cash</label>
+        <input id="cash" type="number" value="30000">
+
+        <label>R&D Eligibility (e.g., 0.70)</label>
+        <input id="eligible" type="number" step="0.01" value="0.70">
+    </div>
+
+    <div class="card">
+        <h2>Expenses</h2>
+
+        <label>COGS</label>
+        <input id="cogs" type="number" value="6000">
+
+        <label>Marketing</label>
+        <input id="marketing" type="number" value="3500">
+
+        <label>Ops</label>
+        <input id="ops" type="number" value="2500">
+
+        <label>Tech – AR</label>
+        <input id="tech_ar" type="number" value="7000">
+
+        <label>Tech – AI</label>
+        <input id="tech_ai" type="number" value="4000">
+
+        <label>Tech – Backend</label>
+        <input id="tech_backend" type="number" value="9000">
+    </div>
+
+    <div class="card">
+        <h2>Outputs</h2>
+        <div id="revenue" class="output"></div>
+        <div id="techSpend" class="output"></div>
+        <div id="totalExpenses" class="output"></div>
+        <div id="rebate" class="output"></div>
+        <div id="cashFlow" class="output"></div>
+        <div id="runway" class="output"></div>
+        <div id="valuation" class="output"></div>
+        <div id="dcf" class="output"></div>
+    </div>
+
+    <div class="card">
+        <h2>Run Model</h2>
+        <button onclick="runModel()">Calculate</button>
+    </div>
+
+</div>
+
+<script>
+function runModel() {
+
+    // Inputs
+    const units = +document.getElementById("units").value;
+    const aov = +document.getElementById("aov").value;
+    const cagr = +document.getElementById("cagr").value;
+    const cash = +document.getElementById("cash").value;
+    const eligible = +document.getElementById("eligible").value;
+
+    // Expenses
+    const cogs = +document.getElementById("cogs").value;
+    const marketing = +document.getElementById("marketing").value;
+    const ops = +document.getElementById("ops").value;
+    const tech_ar = +document.getElementById("tech_ar").value;
+    const tech_ai = +document.getElementById("tech_ai").value;
+    const tech_backend = +document.getElementById("tech_backend").value;
+
+    // Calculations
+    const revenue = units * aov * (1 + cagr);
+    const techSpend = tech_ar + tech_ai + tech_backend;
+    const totalExpenses = cogs + marketing + ops + techSpend;
+
+    const rebate = techSpend * eligible * 0.435;
+    const cashFlow = revenue - totalExpenses + rebate;
+    const runway = (cashFlow <= 0) ? "No runway – negative CF" : (cash / (totalExpenses / 12));
+
+    const valuation = revenue * 6; // midpoint of 5–7×
+    const dcf = cashFlow / (cagr + 0.01);
+
+    // Display results
+    document.getElementById("revenue").innerText = "Revenue: $" + revenue.toFixed(2);
+    document.getElementById("techSpend").innerText = "Tech Spend: $" + techSpend.toFixed(2);
+    document.getElementById("totalExpenses").innerText = "Total Expenses: $" + totalExpenses.toFixed(2);
+    document.getElementById("rebate").innerText = "R&D Rebate (43.5%): $" + rebate.toFixed(2);
+    document.getElementById("cashFlow").innerText = "Cash Flow: $" + cashFlow.toFixed(2);
+    document.getElementById("runway").innerText = "Runway (months): " + (typeof runway === "string" ? runway : runway.toFixed(1));
+    document.getElementById("valuation").innerText = "Valuation (5–7×): $" + valuation.toFixed(2);
+    document.getElementById("dcf").innerText = "DCF Valuation: $" + dcf.toFixed(2);
+}
+</script>
+
+</body>
+</html>
