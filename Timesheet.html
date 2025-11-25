@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Timesheet – Prototype</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --border: #d0d7e2;
+      --bg: #f7f9fc;
+      --bg-alt: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #e5efff;
+      --text-muted: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+    }
+
+    .app-frame {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--bg-alt);
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* Top bar */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    .app-header-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .app-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      border-color: transparent;
+      background: var(--accent);
+    }
+
+    .btn:hover {
+      filter: brightness(1.05);
+    }
+
+    /* Week meta */
+    .week-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #f9fafb;
+      font-size: 13px;
+    }
+
+    .week-meta strong {
+      font-weight: 600;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* Timesheet grid */
+    .timesheet-grid {
+      display: grid;
+      grid-template-columns: 70px repeat(5, 1fr); /* time + Mon–Fri */
+      grid-auto-rows: 40px; /* each row = 1 hour in this prototype */
+      border-top: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+      position: relative;
+    }
+
+    .corner-cell {
+      background: #f9fafb;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-header {
+      padding: 6px 10px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: #f3f4f6;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .day-header span {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .time-label {
+      padding: 4px 6px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f9fafb;
+    }
+
+    .slot {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: #ffffff;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .slot.work-hours {
+      background: #fdfdfd;
+    }
+
+    .slot:hover {
+      background: var(--accent-soft);
+    }
+
+    /* Sample entry block */
+    .entry {
+      position: absolute;
+      background: #eef2ff;
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 220px;
+    }
+
+    .entry-title {
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .entry-meta {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    /* Helpers for absolute layout of entries
+       (these percentages line up roughly with rows/columns) */
+    .entry.mon-9-11 {
+      top: 40px /* header row */ + 40px /* 8am row */ ;
+      left: 70px; /* after time column */
+      transform: translate(0, 40px); /* start ~9am */
+      height: 80px; /* 2 hours */
+    }
+
+    .entry.tue-10-12 {
+      top: 40px + 40px;
+      left: 70px;
+      transform: translate(100%, 80px); /* shift one day right + 2 rows down */
+      height: 80px;
+    }
+
+    @media (max-width: 900px) {
+      .timesheet-grid {
+        grid-template-columns: 50px repeat(3, 1fr);
+      }
+      .app-frame {
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="app-header">
+      <div class="app-header-title">
+        Timesheets · User: FELDMAN, Justin
+      </div>
+      <div class="app-header-actions">
+        <button class="btn">Save</button>
+        <button class="btn">Delete</button>
+        <button class="btn btn-primary">Submit Week</button>
+      </div>
+    </header>
+
+    <div class="week-meta">
+      <div>
+        <strong>Week:</strong> 24/11/2025 – 30/11/2025
+      </div>
+      <div class="status-pill">Active</div>
+    </div>
+
+    <div class="timesheet-grid">
+      <!-- Corner -->
+      <div class="corner-cell"></div>
+
+      <!-- Day headers -->
+      <div class="day-header">
+        Mon<br><span>24 Nov</span>
+      </div>
+      <div class="day-header">
+        Tue<br><span>25 Nov</span>
+      </div>
+      <div class="day-header">
+        Wed<br><span>26 Nov</span>
+      </div>
+      <div class="day-header">
+        Thu<br><span>27 Nov</span>
+      </div>
+      <div class="day-header">
+        Fri<br><span>28 Nov</span>
+      </div>
+
+      <!-- Time rows (08:00–17:00) -->
+      <!-- 08:00 -->
+      <div class="time-label">08:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 09:00 -->
+      <div class="time-label">09:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 10:00 -->
+      <div class="time-label">10:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 11:00 -->
+      <div class="time-label">11:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 12:00 -->
+      <div class="time-label">12:00</div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+
+      <!-- 13:00 -->
+      <div class="time-label">13:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 14:00 -->
+      <div class="time-label">14:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 15:00 -->
+      <div class="time-label">15:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 16:00 -->
+      <div class="time-label">16:00</div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+      <div class="slot work-hours"></div>
+
+      <!-- 17:00 -->
+      <div class="time-label">17:00</div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+
+      <!-- Sample “cards” sitting on top of grid -->
+      <div class="entry mon-9-11">
+        <div class="entry-title">Internal – Firm Management</div>
+        <div class="entry-meta">Business process improvement · 2.0h</div>
+        <div class="entry-meta">Narration: ITR list tracker</div>
+      </div>
+
+      <div class="entry tue-10-12">
+        <div class="entry-title">HLB Projects – Project Atlas</div>
+        <div class="entry-meta">Implementation &amp; execution · 2.0h</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
